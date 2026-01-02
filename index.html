@@ -268,7 +268,6 @@
             resDiv.classList.add('hidden');
 
             try {
-                // Remove trailing slash if present
                 const cleanBaseUrl = BACKEND_URL.replace(/\/$/, "");
                 
                 const response = await fetch(`${cleanBaseUrl}/get_info`, {
@@ -286,7 +285,6 @@
                 document.getElementById('thumb').src = data.thumb;
                 document.getElementById('title').innerText = data.title;
                 
-                // Duration Handling
                 const duration = data.duration || 0;
                 const minutes = Math.floor(duration / 60);
                 document.getElementById('durationBadge').innerText = `${minutes} min`;
