@@ -1,325 +1,73 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VibeTube - Premium Downloader</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
-    
-    <style>
-        body {
-            font-family: 'Outfit', sans-serif;
-            background-color: #020617; /* Deeper Dark */
-            color: #e2e8f0;
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow-x: hidden;
-        }
+<!-- ... Keep your existing <head> and <style> exactly as they are ... -->
 
-        /* --- DYNAMIC BACKGROUND CANVAS --- */
-        #bgCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
-        }
+<script>
+    // 1. UPDATE THIS TO YOUR ACTUAL HUGGING FACE URL
+    const BACKEND_URL = 'https://bariqmalik-ibetube-backend.hf.space';
 
-        /* --- GLASS CARD --- */
-        .glass-card {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
-        }
+    async function fetchInfo() {
+        const urlInput = document.getElementById('url').value;
+        if(!urlInput) { alert("Please paste a URL!"); return; }
 
-        /* --- INTERACTIVE BUTTONS --- */
-        .liquid-btn {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            position: relative;
-            overflow: hidden;
-        }
+        const btn = document.getElementById('btn');
+        const loader = document.getElementById('loader');
+        const resDiv = document.getElementById('result');
 
-        .liquid-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(99, 102, 241, 0.5);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-        }
+        btn.disabled = true;
+        loader.classList.remove('hidden');
+        resDiv.classList.add('hidden');
 
-        .primary-btn {
-            background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
-            position: relative;
-            z-index: 1;
-        }
-
-        .primary-btn::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: -1;
-            border-radius: inherit;
-        }
-
-        .primary-btn:hover::after { opacity: 1; }
-
-        /* Processing Overlay */
-        #processingOverlay {
-            background: rgba(2, 6, 23, 0.95);
-            backdrop-filter: blur(12px);
-            display: none; /* Managed by JS */
-        }
-
-        .loader-ring {
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid #818cf8;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
-</head>
-<body>
-
-    <canvas id="bgCanvas"></canvas>
-
-    <div id="processingOverlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center text-center p-6">
-        <div class="loader-ring mb-6"></div>
-        <h2 class="text-2xl font-bold text-white mb-2">Processing Video...</h2>
-        <p class="text-slate-400 max-w-md text-sm mb-6">
-            Converting high-quality files takes time.<br>
-            Please do not close this tab.
-        </p>
-        <button onclick="document.getElementById('processingOverlay').style.display='none'" 
-                class="text-xs text-red-400 hover:text-red-300 border border-red-900/50 bg-red-950/20 px-4 py-2 rounded-lg transition-colors">
-            Cancel / Close
-        </button>
-    </div>
-
-    <div class="w-full max-w-2xl glass-card rounded-[2.5rem] p-8 sm:p-12 m-4 transform transition-all">
-        
-        <div class="text-center mb-10">
-            <h1 class="text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-white via-blue-400 to-purple-500 mb-3">
-                VibeTube
-            </h1>
-            <div class="flex items-center justify-center gap-2">
-                <span class="h-[1px] w-8 bg-slate-700"></span>
-                <p class="text-slate-400 text-[10px] font-bold tracking-[0.3em] uppercase">Limitless Downloader</p>
-                <span class="h-[1px] w-8 bg-slate-700"></span>
-            </div>
-        </div>
-
-        <div class="space-y-4 mb-10">
-            <div class="relative group">
-                <input type="text" id="url" placeholder="Paste link here..." 
-                    class="w-full bg-slate-950/40 text-white rounded-2xl px-6 py-5 border border-slate-800 focus:border-indigo-500 focus:outline-none transition-all placeholder-slate-600 pr-32">
-                <button onclick="fetchInfo()" id="btn" 
-                    class="absolute right-2 top-2 bottom-2 primary-btn text-white px-6 rounded-xl font-bold text-sm transition-all">
-                    Analyze
-                </button>
-            </div>
-        </div>
-
-        <div id="loader" class="hidden py-8 text-center text-indigo-400 font-bold animate-pulse">
-            Fetching Metadata...
-        </div>
-
-        <div id="result" class="hidden animate-[fadeIn_0.5s_ease-out]">
-            <div class="flex flex-col sm:flex-row gap-6 mb-10 p-2">
-                <div class="relative group shrink-0">
-                    <img id="thumb" class="w-full sm:w-44 aspect-video object-cover rounded-2xl shadow-2xl transition-transform group-hover:scale-105" src="">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-2xl"></div>
-                </div>
-                <div class="flex flex-col justify-center overflow-hidden">
-                    <h3 id="title" class="font-bold text-lg text-white mb-2 truncate"></h3>
-                    
-                    <div class="flex gap-2">
-                        <span id="durationBadge" class="text-[10px] bg-slate-700 text-slate-300 px-2 py-1 rounded-md font-bold"></span>
-                        <span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded-md border border-indigo-500/20 font-bold uppercase">HD Support</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                <div class="space-y-4">
-                    <h4 class="text-indigo-400 text-[11px] font-black uppercase tracking-widest pl-1">Video MP4</h4>
-                    <div id="vList" class="space-y-2"></div>
-                </div>
-                <div class="space-y-4">
-                    <h4 class="text-purple-400 text-[11px] font-black uppercase tracking-widest pl-1">Audio MP3</h4>
-                    <div id="aList" class="space-y-2"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        /* --- DYNAMIC LIVE BACKGROUND --- */
-        const canvas = document.getElementById('bgCanvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        const mouse = { x: null, y: null, radius: 150 };
-
-        window.addEventListener('mousemove', (e) => { mouse.x = e.x; mouse.y = e.y; });
-
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            initParticles();
-        }
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 2 + 0.5;
-                this.baseX = this.x;
-                this.baseY = this.y;
-                this.density = (Math.random() * 30) + 1;
-                this.color = Math.random() > 0.5 ? '#6366f1' : '#a855f7';
-            }
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            update() {
-                let dx = mouse.x - this.x;
-                let dy = mouse.y - this.y;
-                let distance = Math.sqrt(dx*dx + dy*dy);
-                let forceDirectionX = dx / distance;
-                let forceDirectionY = dy / distance;
-                let maxDistance = mouse.radius;
-                let force = (maxDistance - distance) / maxDistance;
-                let directionX = forceDirectionX * force * this.density;
-                let directionY = forceDirectionY * force * this.density;
-
-                if (distance < mouse.radius) {
-                    this.x -= directionX;
-                    this.y -= directionY;
-                } else {
-                    if (this.x !== this.baseX) {
-                        let dx = this.x - this.baseX;
-                        this.x -= dx/10;
-                    }
-                    if (this.y !== this.baseY) {
-                        let dy = this.y - this.baseY;
-                        this.y -= dy/10;
-                    }
-                }
-            }
-        }
-
-        function initParticles() {
-            particles = [];
-            let numberOfParticles = (canvas.width * canvas.height) / 9000;
-            for (let i = 0; i < numberOfParticles; i++) {
-                particles.push(new Particle());
-            }
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < particles.length; i++) {
-                particles[i].draw();
-                particles[i].update();
-            }
-            requestAnimationFrame(animate);
-        }
-
-        window.addEventListener('resize', resize);
-        resize();
-        animate();
-
-        /* --- DOWNLOAD LOGIC --- */
-        // YOUR HUGGING FACE BACKEND URL
-        const BACKEND_URL = 'https://bariqmalik-ibetube-backend.hf.space';
-
-        async function fetchInfo() {
-            const urlInput = document.getElementById('url').value;
-            if(!urlInput) {
-                alert("Please paste a URL!");
-                return;
-            }
-
-            const btn = document.getElementById('btn');
-            const loader = document.getElementById('loader');
-            const resDiv = document.getElementById('result');
-
-            btn.disabled = true;
-            loader.classList.remove('hidden');
-            resDiv.classList.add('hidden');
-
-            try {
-                const cleanBaseUrl = BACKEND_URL.replace(/\/$/, "");
-                
-                const response = await fetch(`${cleanBaseUrl}/get_info`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({url: urlInput})
-                });
-                
-                const data = await response.json();
-                
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-
-                document.getElementById('thumb').src = data.thumb;
-                document.getElementById('title').innerText = data.title;
-                
-                const duration = data.duration || 0;
-                const minutes = Math.floor(duration / 60);
-                document.getElementById('durationBadge').innerText = `${minutes} min`;
-
-                document.getElementById('vList').innerHTML = data.video.map(v => `
-                    <button onclick="startDownload('${urlInput}', '${v.id}', 'video')" class='liquid-btn w-full py-4 rounded-xl text-[11px] font-bold text-white flex justify-between px-5'>
-                        <span>${v.res}</span>
-                        <span class="text-indigo-400">MP4</span>
-                    </button>
-                `).join('');
-
-                document.getElementById('aList').innerHTML = data.audio.map(a => `
-                    <button onclick="startDownload('${urlInput}', 'bestaudio', 'mp3')" class='liquid-btn w-full py-4 rounded-xl text-[11px] font-bold text-white flex justify-between px-5'>
-                        <span>${a.q}</span>
-                        <span class="text-purple-400">MP3</span>
-                    </button>
-                `).join('');
-
-                resDiv.classList.remove('hidden');
-            } catch(e) { 
-                alert("Error: " + e.message); 
-            } finally {
-                loader.classList.add('hidden');
-                btn.disabled = false;
-            }
-        }
-
-        function startDownload(url, format, mode) {
-            document.getElementById('processingOverlay').style.display = 'flex';
-            const cleanBaseUrl = BACKEND_URL.replace(/\/$/, "");
-            const downloadUrl = `${cleanBaseUrl}/download?url=${encodeURIComponent(url)}&fmt=${format}&mode=${mode}`;
+        try {
+            const response = await fetch(`${BACKEND_URL}/get_info`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({url: urlInput})
+            });
             
-            // Native browser download
-            window.location.href = downloadUrl;
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+
+            // Using the correct keys from our Python backend
+            document.getElementById('thumb').src = data.thumb;
+            document.getElementById('title').innerText = data.title;
+            
+            const duration = data.duration || 0;
+            const minutes = Math.floor(duration / 60);
+            document.getElementById('durationBadge').innerText = `${minutes} min`;
+
+            // This is the part that was causing the 'map' error
+            // Now data.video and data.audio exist!
+            document.getElementById('vList').innerHTML = (data.video || []).map(v => `
+                <button onclick="startDownload('${urlInput}', '${v.id}', 'video')" class='liquid-btn w-full py-4 rounded-xl text-[11px] font-bold text-white flex justify-between px-5'>
+                    <span>${v.res}</span>
+                    <span class="text-indigo-400">MP4</span>
+                </button>
+            `).join('');
+
+            document.getElementById('aList').innerHTML = (data.audio || []).map(a => `
+                <button onclick="startDownload('${urlInput}', '${a.id}', 'mp3')" class='liquid-btn w-full py-4 rounded-xl text-[11px] font-bold text-white flex justify-between px-5'>
+                    <span>${a.q}</span>
+                    <span class="text-purple-400">MP3</span>
+                </button>
+            `).join('');
+
+            resDiv.classList.remove('hidden');
+        } catch(e) { 
+            alert("Error: " + e.message); 
+        } finally {
+            loader.classList.add('hidden');
+            btn.disabled = false;
         }
-    </script>
-</body>
-</html>
+    }
+
+    function startDownload(url, format, mode) {
+        document.getElementById('processingOverlay').style.display = 'flex';
+        // This builds a link like: https://backend.hf.space/download?url=...&fmt=...&mode=...
+        const downloadUrl = `${BACKEND_URL}/download?url=${encodeURIComponent(url)}&fmt=${format}&mode=${mode}`;
+        window.location.href = downloadUrl;
+        
+        // Hide overlay after a few seconds because browser handles the download
+        setTimeout(() => {
+            document.getElementById('processingOverlay').style.display = 'none';
+        }, 5000);
+    }
+</script>
