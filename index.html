@@ -4,26 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- GOOGLE SEARCH CONSOLE VERIFICATION -->
+    <!-- GOOGLE VERIFICATION FIRST -->
     <meta name="google-site-verification" content="nKJvgUZewnu5jLIakJYwPa9sJ84Dm50HuYUGYP6aWYE" />
 
     <!-- SEO META TAGS -->
-    <title>VibeTube | Premium 1080p YouTube Video Downloader & MP3 Converter</title>
-    <meta name="description" content="Download YouTube videos in 1080p HD or convert to MP3 instantly with VibeTube. Fast, free, and no registration required.">
-    <meta name="keywords" content="youtube downloader, vibetube, download youtube 1080p, mp3 converter, online video downloader">
+    <title>VibeTube | Premium YouTube Video Downloader (1080p & MP3)</title>
+    <meta name="description" content="Download YouTube videos in 1080p HD or MP3 for free. Fast, limitless downloader with premium interface.">
+    <meta name="keywords" content="youtube downloader, vibetube, download youtube 1080p, mp3 converter">
     <meta name="robots" content="index, follow">
-    
-    <!-- Open Graph (How it looks on Social Media) -->
-    <meta property="og:title" content="VibeTube - Premium YouTube Downloader">
-    <meta property="og:description" content="Download YouTube videos in high quality for free.">
-    <meta property="og:url" content="https://vibetube-5szbobmcn-bariqmaliks-projects.vercel.app/">
-    <meta property="og:type" content="website">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Outfit', sans-serif; background-color: #020617; color: #e2e8f0; margin: 0; min-height: 100vh; overflow-x: hidden; }
+        body { font-family: 'Outfit', sans-serif; background-color: #020617; color: #e2e8f0; margin: 0; min-height: 100vh; overflow-x: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         #bgCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: radial-gradient(circle at center, #0f172a 0%, #020617 100%); }
         .glass-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8); }
         .liquid-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.4s; }
@@ -34,19 +28,17 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center pt-20">
+<body class="pt-20">
 
     <canvas id="bgCanvas"></canvas>
 
-    <!-- Overlay -->
     <div id="processingOverlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center text-center p-6">
         <div class="loader-ring mb-6"></div>
-        <h2 class="text-2xl font-bold text-white mb-2">Processing...</h2>
-        <p class="text-slate-400 max-w-md text-sm mb-6">Merging HD video takes a few moments. Please don't close this tab.</p>
+        <h2 class="text-2xl font-bold text-white mb-2">Processing Video...</h2>
+        <p class="text-slate-400 max-w-md text-sm mb-6">High-quality merging takes time. Please don't close this tab.</p>
     </div>
 
-    <!-- Main Card -->
-    <div class="w-full max-w-2xl glass-card rounded-[2.5rem] p-8 sm:p-12 m-4 transform transition-all">
+    <div class="w-full max-w-2xl glass-card rounded-[2.5rem] p-8 sm:p-12 m-4">
         <div class="text-center mb-10">
             <h1 class="text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-white via-blue-400 to-purple-500 mb-3">VibeTube</h1>
             <p class="text-slate-400 text-[10px] font-bold tracking-[0.3em] uppercase">Limitless Downloader</p>
@@ -63,7 +55,7 @@
             <div class="flex flex-col sm:flex-row gap-6 mb-10">
                 <img id="thumb" class="w-full sm:w-44 aspect-video object-cover rounded-2xl shadow-2xl" src="">
                 <div class="flex flex-col justify-center">
-                    <h3 id="title" class="font-bold text-lg text-white mb-2"></h3>
+                    <h3 id="title" class="font-bold text-lg text-white mb-2 truncate"></h3>
                     <span id="durationBadge" class="w-max text-[10px] bg-slate-700 text-slate-300 px-2 py-1 rounded-md font-bold"></span>
                 </div>
             </div>
@@ -74,21 +66,13 @@
         </div>
     </div>
 
-    <!-- SEO CONTENT -->
     <section class="max-w-2xl w-full px-6 py-20 text-slate-400">
-        <h2 class="text-2xl font-bold text-white mb-4">Free YouTube Video Downloader</h2>
-        <p class="mb-6">VibeTube is a high-speed downloader that allows you to download YouTube videos in 1080p, 2K, and 4K resolutions. Convert your favorite music to high-quality MP3 instantly.</p>
-        <h3 class="text-lg font-bold text-indigo-400 mb-2">Features</h3>
-        <ul class="list-disc pl-5 space-y-2">
-            <li>Download HD videos up to 4K quality.</li>
-            <li>Fast MP3 conversion for all YouTube music.</li>
-            <li>No registration or software installation needed.</li>
-            <li>Secure and private processing via Hugging Face.</li>
-        </ul>
+        <h2 class="text-2xl font-bold text-white mb-4">Free YouTube Downloader</h2>
+        <p>Download your favorite videos in 1080p, 2K, or convert them to MP3 with VibeTube.</p>
     </section>
 
     <script>
-        // REPLACE THIS WITH YOUR DIRECT HF URL (e.g. https://bariqmalik-ibetube-backend.hf.space)
+        // REPLACE WITH YOUR DIRECT HF URL
         const BACKEND_URL = 'https://bariqmalik-ibetube-backend.hf.space';
 
         async function fetchInfo() {
