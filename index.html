@@ -1,73 +1,131 @@
-<!-- ... Keep your existing <head> and <style> exactly as they are ... -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO META TAGS -->
+    <title>VibeTube | Best YouTube Video Downloader (1080p & MP3)</title>
+    <meta name="description" content="VibeTube is a free, high-speed YouTube video downloader. Download in 1080p HD or convert to MP3 instantly. No registration required.">
+    <meta name="keywords" content="youtube downloader, vibetube, download youtube 1080p, mp3 converter, online video downloader">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Google Search Console Verification (Paste your code here) -->
+    <meta name="google-site-verification" content="YOUR_CODE_HERE" />
 
-<script>
-    // 1. UPDATE THIS TO YOUR ACTUAL HUGGING FACE URL
-    const BACKEND_URL = 'https://bariqmalik-ibetube-backend.hf.space';
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #020617; color: #e2e8f0; margin: 0; min-height: 100vh; overflow-x: hidden; }
+        #bgCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: radial-gradient(circle at center, #0f172a 0%, #020617 100%); }
+        .glass-card { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8); }
+        .liquid-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.4s; }
+        .liquid-btn:hover { background: rgba(255, 255, 255, 0.08); border-color: #6366f1; transform: translateY(-3px); }
+        .primary-btn { background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); }
+        #processingOverlay { background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(12px); display: none; }
+        .loader-ring { border: 4px solid rgba(255, 255, 255, 0.1); border-top: 4px solid #818cf8; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center pt-20">
 
-    async function fetchInfo() {
-        const urlInput = document.getElementById('url').value;
-        if(!urlInput) { alert("Please paste a URL!"); return; }
+    <canvas id="bgCanvas"></canvas>
 
-        const btn = document.getElementById('btn');
-        const loader = document.getElementById('loader');
-        const resDiv = document.getElementById('result');
+    <!-- Overlay -->
+    <div id="processingOverlay" class="fixed inset-0 z-50 flex flex-col items-center justify-center text-center p-6">
+        <div class="loader-ring mb-6"></div>
+        <h2 class="text-2xl font-bold text-white mb-2">Processing Video...</h2>
+        <p class="text-slate-400 max-w-md text-sm mb-6">High-quality merging takes a moment. Please wait.</p>
+    </div>
 
-        btn.disabled = true;
-        loader.classList.remove('hidden');
-        resDiv.classList.add('hidden');
+    <!-- Main Card -->
+    <div class="w-full max-w-2xl glass-card rounded-[2.5rem] p-8 sm:p-12 m-4">
+        <div class="text-center mb-10">
+            <h1 class="text-5xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-white via-blue-400 to-purple-500 mb-3">VibeTube</h1>
+            <p class="text-slate-400 text-[10px] font-bold tracking-[0.3em] uppercase">Limitless High-Quality Downloader</p>
+        </div>
 
-        try {
-            const response = await fetch(`${BACKEND_URL}/get_info`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({url: urlInput})
-            });
+        <div class="relative group mb-10">
+            <input type="text" id="url" placeholder="Paste YouTube link here..." class="w-full bg-slate-950/40 text-white rounded-2xl px-6 py-5 border border-slate-800 focus:border-indigo-500 focus:outline-none pr-32">
+            <button onclick="fetchInfo()" id="btn" class="absolute right-2 top-2 bottom-2 primary-btn text-white px-6 rounded-xl font-bold text-sm">Analyze</button>
+        </div>
+
+        <div id="loader" class="hidden py-8 text-center text-indigo-400 font-bold animate-pulse">Fetching Metadata...</div>
+
+        <div id="result" class="hidden">
+            <div class="flex flex-col sm:flex-row gap-6 mb-10">
+                <img id="thumb" class="w-full sm:w-44 aspect-video object-cover rounded-2xl shadow-2xl" src="">
+                <div class="flex flex-col justify-center">
+                    <h3 id="title" class="font-bold text-lg text-white mb-2"></h3>
+                    <span id="durationBadge" class="w-max text-[10px] bg-slate-700 text-slate-300 px-2 py-1 rounded-md font-bold"></span>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                <div><h4 class="text-indigo-400 text-[11px] font-black uppercase mb-4">Video MP4</h4><div id="vList" class="space-y-2"></div></div>
+                <div><h4 class="text-purple-400 text-[11px] font-black uppercase mb-4">Audio MP3</h4><div id="aList" class="space-y-2"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEO CONTENT SECTION (Google Loves This) -->
+    <section class="max-w-2xl w-full px-6 py-20 text-slate-400">
+        <h2 class="text-2xl font-bold text-white mb-4">Free High-Quality YouTube Video Downloader</h2>
+        <p class="mb-6">VibeTube is the ultimate tool for downloading YouTube videos in 1080p, 2K, and 4K resolutions. Our advanced backend processing ensures that you get the best audio and video quality without any limits.</p>
+        <h3 class="text-lg font-bold text-indigo-400 mb-2">Why Choose VibeTube?</h3>
+        <ul class="list-disc pl-5 space-y-2 mb-6">
+            <li><strong>No Limits:</strong> Download long videos (up to 2 hours) easily.</li>
+            <li><strong>HD Support:</strong> Extract 1080p and 4K video formats.</li>
+            <li><strong>MP3 Converter:</strong> Fast conversion for high-quality audio.</li>
+            <li><strong>Privacy First:</strong> We do not store your data or download history.</li>
+        </ul>
+    </section>
+
+    <script>
+        // UPDATE THIS WITH YOUR DIRECT HUGGING FACE URL
+        const BACKEND_URL = 'https://bariqmalik-ibetube-backend.hf.space';
+
+        async function fetchInfo() {
+            const urlInput = document.getElementById('url').value;
+            if(!urlInput) return alert("Paste a URL!");
             
-            const data = await response.json();
-            if (data.error) throw new Error(data.error);
+            document.getElementById('loader').classList.remove('hidden');
+            document.getElementById('result').classList.add('hidden');
 
-            // Using the correct keys from our Python backend
-            document.getElementById('thumb').src = data.thumb;
-            document.getElementById('title').innerText = data.title;
-            
-            const duration = data.duration || 0;
-            const minutes = Math.floor(duration / 60);
-            document.getElementById('durationBadge').innerText = `${minutes} min`;
+            try {
+                const response = await fetch(`${BACKEND_URL}/get_info`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({url: urlInput})
+                });
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
 
-            // This is the part that was causing the 'map' error
-            // Now data.video and data.audio exist!
-            document.getElementById('vList').innerHTML = (data.video || []).map(v => `
-                <button onclick="startDownload('${urlInput}', '${v.id}', 'video')" class='liquid-btn w-full py-4 rounded-xl text-[11px] font-bold text-white flex justify-between px-5'>
-                    <span>${v.res}</span>
-                    <span class="text-indigo-400">MP4</span>
-                </button>
-            `).join('');
+                document.getElementById('thumb').src = data.thumb;
+                document.getElementById('title').innerText = data.title;
+                document.getElementById('durationBadge').innerText = `${Math.floor(data.duration/60)} min`;
 
-            document.getElementById('aList').innerHTML = (data.audio || []).map(a => `
-                <button onclick="startDownload('${urlInput}', '${a.id}', 'mp3')" class='liquid-btn w-full py-4 rounded-xl text-[11px] font-bold text-white flex justify-between px-5'>
-                    <span>${a.q}</span>
-                    <span class="text-purple-400">MP3</span>
-                </button>
-            `).join('');
+                document.getElementById('vList').innerHTML = (data.video || []).map(v => `
+                    <button onclick="startDownload('${urlInput}', '${v.id}', 'video')" class='liquid-btn w-full py-4 rounded-xl text-[11px] font-bold text-white flex justify-between px-5'>
+                        <span>${v.res}</span><span class="text-indigo-400">MP4</span>
+                    </button>`).join('');
 
-            resDiv.classList.remove('hidden');
-        } catch(e) { 
-            alert("Error: " + e.message); 
-        } finally {
-            loader.classList.add('hidden');
-            btn.disabled = false;
+                document.getElementById('aList').innerHTML = (data.audio || []).map(a => `
+                    <button onclick="startDownload('${urlInput}', '${a.id}', 'mp3')" class='liquid-btn w-full py-4 rounded-xl text-[11px] font-bold text-white flex justify-between px-5'>
+                        <span>${a.q}</span><span class="text-purple-400">MP3</span>
+                    </button>`).join('');
+
+                document.getElementById('result').classList.remove('hidden');
+            } catch(e) { alert("Error: " + e.message); }
+            finally { document.getElementById('loader').classList.add('hidden'); }
         }
-    }
 
-    function startDownload(url, format, mode) {
-        document.getElementById('processingOverlay').style.display = 'flex';
-        // This builds a link like: https://backend.hf.space/download?url=...&fmt=...&mode=...
-        const downloadUrl = `${BACKEND_URL}/download?url=${encodeURIComponent(url)}&fmt=${format}&mode=${mode}`;
-        window.location.href = downloadUrl;
-        
-        // Hide overlay after a few seconds because browser handles the download
-        setTimeout(() => {
-            document.getElementById('processingOverlay').style.display = 'none';
-        }, 5000);
-    }
-</script>
+        function startDownload(url, format, mode) {
+            document.getElementById('processingOverlay').style.display = 'flex';
+            const downloadUrl = `${BACKEND_URL}/download?url=${encodeURIComponent(url)}&fmt=${format}&mode=${mode}`;
+            window.location.href = downloadUrl;
+            setTimeout(() => { document.getElementById('processingOverlay').style.display = 'none'; }, 8000);
+        }
+    </script>
+</body>
+</html>
