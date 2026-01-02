@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
-Sitemap: https://your-site-name.vercel.app/sitemap.xml
+
+Sitemap: https://vibetube-5szbobmcn-bariqmaliks-projects.vercel.app/sitemap.xml
